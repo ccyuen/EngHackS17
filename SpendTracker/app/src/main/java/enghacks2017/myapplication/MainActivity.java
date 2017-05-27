@@ -280,18 +280,60 @@ public class MainActivity extends AppCompatActivity {
         return Bitmap.createScaledBitmap(bitmap, resizedWidth, resizedHeight, false);
     }
 
-    private String convertResponseToString(BatchAnnotateImagesResponse response) {
-        String message = "I found these things:\n\n";
-
-        List<EntityAnnotation> labels = response.getResponses().get(0).getLabelAnnotations();
-        if (labels != null) {
-            for (EntityAnnotation label : labels) {
-                message += String.format(Locale.US, "%.3f: %s", label.getScore(), label.getDescription());
-                message += "\n";
-            }
-        } else {
-            message += "nothing";
+    private double extractMoneyFromString(String s) {
+        if (!s.contains("."))
+            return -1;
+        try {
+            if (s.charAt(0) == '$')
+                return Double.parseDouble(s.substring(1));
+            else
+                return Double.parseDouble(s);
         }
+        catch (IndexOutOfBoundsException | NumberFormatException ex) {
+            return -1.;
+        }
+    }
+
+    private String convertResponseToString(BatchAnnotateImagesResponse response) {
+        List<EntityAnnotation> labels = response.getResponses().get(0).getTextAnnotations();
+
+        double total = 0.;
+        String location = "";
+        if (labels != null) {
+            // try to detect total as either the last number on screen or the first number after the last occurrence of word, "total"
+            int foundTotal = 0;
+            String[] allText = labels.get(0).getDescription().split("\n");  // if text was detected, labels[0] always stores all the text, separated by line breaks
+            for (String word: allText) {
+                double money = extractMoneyFromString(word);
+                if (money > 0. && foundTotal != 2)
+                    total = money;
+                if (word.toLowerCase().contains("total"))
+                    foundTotal = 1;
+                else if (money > 0. && foundTotal == 1)
+                    foundTotal = 2;
+            }
+            // try to detect the restaurant location as the first two lines with at least 2 letters
+            for (String word: allText) {
+                int acc = 0;
+                for (char e: word.toCharArray())
+                    if (('a' <= e && e <= 'z') || ('A' <= e && e <= 'Z'))
+                        acc++;
+                if (acc > 1 && location == "")
+                    location = word;
+                else if (acc > 1) {
+                    location += "\n" + word;
+                    break;
+                }
+            }
+        }
+        String message = "";
+        if (labels == null || total < 0. || location.equals(""))
+            message += "database not updated; receipt information could not be detected";
+        else
+            message += String.format("database updated:\n\tlocation: %s\n\ttotal: %.2f", location, total);
+
+        // update database
+        //database.add(location, new Date(), total);
 
         return message;
     }
