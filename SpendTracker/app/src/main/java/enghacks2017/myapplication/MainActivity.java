@@ -43,7 +43,7 @@ import java.util.List;
 import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
-    private static final String CLOUD_VISION_API_KEY = "AIzaSyAD-I0sD-7YVYtj05WkYIqtUYQpZaOmC4I";
+    private static final String CLOUD_VISION_API_KEY = "AIzaSyBfbgilMF5p2fNDwuNqbHJCJxLlD0YNOBY";
     public static final String FILE_NAME = "temp.jpg";
     private static final String ANDROID_CERT_HEADER = "X-Android-Cert";
     private static final String ANDROID_PACKAGE_HEADER = "X-Android-Package";
@@ -104,11 +104,8 @@ public class MainActivity extends AppCompatActivity {
                 CAMERA_PERMISSIONS_REQUEST,
                 Manifest.permission.READ_EXTERNAL_STORAGE,
                 Manifest.permission.CAMERA)) {
-            Log.wtf(TAG, "point 1");
             Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            Log.wtf(TAG, "point 2");
             Uri photoUri = FileProvider.getUriForFile(this, getApplicationContext().getPackageName() + ".provider", getCameraFile());
-            Log.wtf(TAG, "point 3");
             intent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             startActivityForResult(intent, CAMERA_IMAGE_REQUEST);
