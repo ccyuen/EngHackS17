@@ -5,7 +5,7 @@ android {
     buildToolsVersion "25.0.2"
 
     defaultConfig {
-        applicationId "enghacks2017.myapplication"
+        applicationId "com.google.sample.cloudvision"
         minSdkVersion 22
         targetSdkVersion 25
         versionCode 1
@@ -28,7 +28,5 @@ dependencies {
     compile 'com.google.api-client:google-api-client-android:1.20.0' exclude module: 'httpclient'
     compile 'com.google.http-client:google-http-client-gson:1.20.0' exclude module: 'httpclient'
 
-    compile 'com.google.apis:google-api-services-vision:v1-rev2-1.21.0'
-
-//    compile files('libs/common-io-2.5.jar')
+    compile 'com.google.apis:google-api-services-vision:v1-rev2-1.21.0'z
 }

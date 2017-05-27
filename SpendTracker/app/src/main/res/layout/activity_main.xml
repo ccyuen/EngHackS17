@@ -8,6 +8,11 @@
     android:orientation="vertical"
     tools:context="enghacks2017.myapplication.MainActivity">
 
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="match_parent"
+        android:layout_height="379dp" />
+
     <FrameLayout
         android:id="@+id/content"
         android:layout_width="match_parent"
@@ -19,6 +24,8 @@
             android:layout_width="match_parent"
             android:layout_height="106dp"
             android:text="eyo" />
+
+        <!--TODO remove "eyo" lke wtf-->
     </FrameLayout>
 
     <android.support.design.widget.BottomNavigationView
