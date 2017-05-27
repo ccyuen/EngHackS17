@@ -23,9 +23,15 @@
             android:id="@+id/message"
             android:layout_width="match_parent"
             android:layout_height="106dp"
-            android:text="eyo" />
+            android:text="" />
 
-        <!--TODO remove "eyo" lke wtf-->
+        <TextView
+            android:id="@+id/image_details"
+            android:layout_width="match_parent"
+            android:layout_height="106dp"
+            android:text=""
+            android:textAlignment="center" />
+
     </FrameLayout>
 
     <android.support.design.widget.BottomNavigationView

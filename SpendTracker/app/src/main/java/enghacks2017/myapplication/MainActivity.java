@@ -49,11 +49,10 @@ public class MainActivity extends AppCompatActivity {
     private static final String ANDROID_PACKAGE_HEADER = "X-Android-Package";
 
     private static final String TAG = MainActivity.class.getSimpleName();
-    private static final int GALLERY_PERMISSIONS_REQUEST = 0;
-    private static final int GALLERY_IMAGE_REQUEST = 1;
     public static final int CAMERA_PERMISSIONS_REQUEST = 2;
     public static final int CAMERA_IMAGE_REQUEST = 3;
 
+    private TextView mImageDetails;
     private TextView mTextMessage;
     private ImageView newPhoto;
 
@@ -65,11 +64,9 @@ public class MainActivity extends AppCompatActivity {
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
             switch (item.getItemId()) {
                 case R.id.navigation_camera:
-//                    mTextMessage.setText(R.string.tab_camera);
                     dispatchTakePictureIntent();
                     return true;
                 case R.id.navigation_analytics:
-                    mTextMessage.setText(R.string.tab_analytics);
                     return true;
             }
             return false;
@@ -83,14 +80,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-//        final Button button = (Button) findViewById(R.id.button);
-//        button.setOnClickListener(new View.OnClickListener() {
-//            public void onClick(View v) {
-//                // Perform action on click
-//                dispatchTakePictureIntent();
-//            }
-//        });
-
+        mImageDetails = (TextView) findViewById(R.id.image_details);
         mTextMessage = (TextView) findViewById(R.id.message);
         newPhoto = (ImageView) findViewById(R.id.imageView);
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
@@ -167,9 +157,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private void callCloudVision(final Bitmap bitmap) throws IOException { //TODO 3
+    private void callCloudVision(final Bitmap bitmap) throws IOException { //
         // Switch text to loading
-//        mImageDetails.setText(R.string.loading_message);
+        mImageDetails.setText("Image is processing, please wait");
 
         // Do the real work in an async task, because we need to use the network anyway
         new AsyncTask<Object, Void, String>() {
@@ -224,7 +214,7 @@ public class MainActivity extends AppCompatActivity {
                         // add the features we want
                         annotateImageRequest.setFeatures(new ArrayList<Feature>() {{
                             Feature labelDetection = new Feature();
-                            labelDetection.setType("LABEL_DETECTION");
+                            labelDetection.setType("TEXT_DETECTION");
                             labelDetection.setMaxResults(10);
                             add(labelDetection);
                         }});
@@ -251,9 +241,9 @@ public class MainActivity extends AppCompatActivity {
                 return "Cloud Vision API request failed. Check logs for details.";
             }
 
-//            protected void onPostExecute(String result) {
-//                mImageDetails.setText(result);
-//            }
+            protected void onPostExecute(String result) {
+                mImageDetails.setText("");
+            }
         }.execute();
     }
 
