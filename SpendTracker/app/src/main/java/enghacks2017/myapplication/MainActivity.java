@@ -1,6 +1,24 @@
-package enghacks2017.myapplication;
+/*
+ * Copyright 2016 Google Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.google.sample.cloudvision;
 
 import android.Manifest;
+import android.content.DialogInterface;
+import android.content.Entity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -9,86 +27,128 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
-import android.support.design.widget.BottomNavigationView;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.FileProvider;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.api.client.extensions.android.http.AndroidHttp;
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.vision.v1.Vision;
+import com.google.api.services.vision.v1.VisionRequest;
 import com.google.api.services.vision.v1.VisionRequestInitializer;
 import com.google.api.services.vision.v1.model.AnnotateImageRequest;
 import com.google.api.services.vision.v1.model.BatchAnnotateImagesRequest;
 import com.google.api.services.vision.v1.model.BatchAnnotateImagesResponse;
+import com.google.api.services.vision.v1.model.BoundingPoly;
 import com.google.api.services.vision.v1.model.EntityAnnotation;
 import com.google.api.services.vision.v1.model.Feature;
 import com.google.api.services.vision.v1.model.Image;
+import com.google.api.services.vision.v1.model.Vertex;
 
-import com.google.api.client.googleapis.json.GoogleJsonResponseException;
-import com.google.api.services.vision.v1.VisionRequest;
+//import org.apache.commons.codec.binary.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
-    private static final String CLOUD_VISION_API_KEY = "AIzaSyBfbgilMF5p2fNDwuNqbHJCJxLlD0YNOBY";
+    private static final String CLOUD_VISION_API_KEY = "AIzaSyAD-I0sD-7YVYtj05WkYIqtUYQpZaOmC4I";
     public static final String FILE_NAME = "temp.jpg";
     private static final String ANDROID_CERT_HEADER = "X-Android-Cert";
     private static final String ANDROID_PACKAGE_HEADER = "X-Android-Package";
 
     private static final String TAG = MainActivity.class.getSimpleName();
+    private static final int GALLERY_PERMISSIONS_REQUEST = 0;
+    private static final int GALLERY_IMAGE_REQUEST = 1;
     public static final int CAMERA_PERMISSIONS_REQUEST = 2;
     public static final int CAMERA_IMAGE_REQUEST = 3;
 
     private TextView mImageDetails;
-    private TextView mTextMessage;
-    private ImageView newPhoto;
-
-
-    public BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
-            = new BottomNavigationView.OnNavigationItemSelectedListener() {
-
-        @Override
-        public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-            switch (item.getItemId()) {
-                case R.id.navigation_camera:
-                    dispatchTakePictureIntent();
-                    return true;
-                case R.id.navigation_analytics:
-                    return true;
-            }
-            return false;
-        }
-
-    };
-
+    private ImageView mMainImage;
+    private ReceiptDatabase database;
+    private TextView screen;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        try {
+            database = new ReceiptDatabase(getExternalFilesDir("OCR_Tracker_App_Test").getPath() + "/transactions.ser");
+        }
+        catch (IOException ex) {}  // null pointer exception later
+
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder
+                        .setMessage(R.string.dialog_select_prompt)
+                        .setPositiveButton(R.string.dialog_select_gallery, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                startGalleryChooser();
+                            }
+                        })
+                        .setNegativeButton(R.string.dialog_select_camera, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                startCamera();
+                            }
+                        });
+                builder.create().show();
+            }
+        });
+
+        screen = (TextView) findViewById(R.id.screen);
+        FloatingActionButton displayEntries = (FloatingActionButton) findViewById(R.id.displayEntries);
+        displayEntries.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                String acc = "";
+                for (Event e: database.query())
+                    acc += e.toString() + "\n";
+                screen.setText(acc);
+            }
+        });
+        FloatingActionButton dropEntries = (FloatingActionButton) findViewById(R.id.dropEntries);
+        dropEntries.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                database.drop();
+                screen.setText("recent actions: none");
+            }
+        });
 
         mImageDetails = (TextView) findViewById(R.id.image_details);
-        mTextMessage = (TextView) findViewById(R.id.message);
-        newPhoto = (ImageView) findViewById(R.id.imageView);
-        BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
-        navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
+        mMainImage = (ImageView) findViewById(R.id.main_image);
     }
 
+    public void startGalleryChooser() {
+        if (PermissionUtils.requestPermission(this, GALLERY_PERMISSIONS_REQUEST, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+            Intent intent = new Intent();
+            intent.setType("image/*");
+            intent.setAction(Intent.ACTION_GET_CONTENT);
+            startActivityForResult(Intent.createChooser(intent, "Select a photo"),
+                    GALLERY_IMAGE_REQUEST);
+        }
+    }
 
-    public void dispatchTakePictureIntent() {
+    public void startCamera() {
         if (PermissionUtils.requestPermission(
                 this,
                 CAMERA_PERMISSIONS_REQUEST,
@@ -102,23 +162,22 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
     public File getCameraFile() {
         File dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         return new File(dir, FILE_NAME);
     }
 
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == CAMERA_IMAGE_REQUEST && resultCode == RESULT_OK) {
+        if (requestCode == GALLERY_IMAGE_REQUEST && resultCode == RESULT_OK && data != null) {
+            uploadImage(data.getData());
+        } else if (requestCode == CAMERA_IMAGE_REQUEST && resultCode == RESULT_OK) {
             Uri photoUri = FileProvider.getUriForFile(this, getApplicationContext().getPackageName() + ".provider", getCameraFile());
             uploadImage(photoUri);
         }
     }
-
 
     @Override
     public void onRequestPermissionsResult(
@@ -127,14 +186,18 @@ public class MainActivity extends AppCompatActivity {
         switch (requestCode) {
             case CAMERA_PERMISSIONS_REQUEST:
                 if (PermissionUtils.permissionGranted(requestCode, CAMERA_PERMISSIONS_REQUEST, grantResults)) {
-                    dispatchTakePictureIntent();
+                    startCamera();
+                }
+                break;
+            case GALLERY_PERMISSIONS_REQUEST:
+                if (PermissionUtils.permissionGranted(requestCode, GALLERY_PERMISSIONS_REQUEST, grantResults)) {
+                    startGalleryChooser();
                 }
                 break;
         }
     }
 
-
-    public void uploadImage(Uri uri) { //
+    public void uploadImage(Uri uri) {
         if (uri != null) {
             try {
                 // scale the image to save on bandwidth
@@ -144,22 +207,21 @@ public class MainActivity extends AppCompatActivity {
                                 1200);
 
                 callCloudVision(bitmap);
-                newPhoto.setImageBitmap(bitmap);
+                mMainImage.setImageBitmap(bitmap);
 
             } catch (IOException e) {
                 Log.d(TAG, "Image picking failed because " + e.getMessage());
-//                Toast.makeText(this, R.string.image_picker_error, Toast.LENGTH_LONG).show();
+                Toast.makeText(this, R.string.image_picker_error, Toast.LENGTH_LONG).show();
             }
         } else {
             Log.d(TAG, "Image picker gave us a null image.");
-//            Toast.makeText(this, R.string.image_picker_error, Toast.LENGTH_LONG).show();
+            Toast.makeText(this, R.string.image_picker_error, Toast.LENGTH_LONG).show();
         }
     }
 
-
-    private void callCloudVision(final Bitmap bitmap) throws IOException { //
+    private void callCloudVision(final Bitmap bitmap) throws IOException {
         // Switch text to loading
-        mImageDetails.setText("Image is processing, please wait");
+        mImageDetails.setText(R.string.loading_message);
 
         // Do the real work in an async task, because we need to use the network anyway
         new AsyncTask<Object, Void, String>() {
@@ -214,6 +276,7 @@ public class MainActivity extends AppCompatActivity {
                         // add the features we want
                         annotateImageRequest.setFeatures(new ArrayList<Feature>() {{
                             Feature labelDetection = new Feature();
+//                            labelDetection.setType("LABEL_DETECTION");
                             labelDetection.setType("TEXT_DETECTION");
                             labelDetection.setMaxResults(10);
                             add(labelDetection);
@@ -242,7 +305,9 @@ public class MainActivity extends AppCompatActivity {
             }
 
             protected void onPostExecute(String result) {
-                mImageDetails.setText("");
+                String[] resultPair = result.split("rrsgrsxc");
+                mImageDetails.setText(resultPair[0]);
+                screen.setText(resultPair[1]);
             }
         }.execute();
     }
@@ -316,13 +381,22 @@ public class MainActivity extends AppCompatActivity {
         String message = "";
         if (labels == null || total < 0. || location.equals(""))
             message += "database not updated; receipt information could not be detected";
-        else
+        else {
             message += String.format("database updated:\n\tlocation: %s\n\ttotal: %.2f", location, total);
+            // update database
+            database.add(location, total);
+        }
 
-        // update database
-        //database.add(location, new Date(), total);
+        String acc = "Recent actions:\n";
+        for (Event e: database.query())
+            acc += "\n " + e.toString();
+        message += "rrsgrsxc" + acc;
+
+//        try {
+//            message += response.toPrettyString();
+//        }
+//        catch (IOException ex) {}
 
         return message;
     }
-
 }
