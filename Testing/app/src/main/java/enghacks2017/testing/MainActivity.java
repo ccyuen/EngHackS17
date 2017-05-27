@@ -1,17 +1,15 @@
-package enghacks2017.myapplication;
+package enghacks2017.testing;
 
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.support.annotation.NonNull;
-import android.support.design.widget.BottomNavigationView;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
 import android.util.Log;
-import android.view.MenuItem;
-import android.widget.TextView;
+import android.view.View;
+import android.widget.Button;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,37 +18,20 @@ import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
 
-    private TextView mTextMessage;
-
-    private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
-            = new BottomNavigationView.OnNavigationItemSelectedListener() {
-
-        @Override
-        public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-            switch (item.getItemId()) {
-                case R.id.navigation_camera:
-                    mTextMessage.setText(R.string.tab_camera);
-                    dispatchTakePictureIntent();
-                    return true;
-                case R.id.navigation_analytics:
-                    mTextMessage.setText(R.string.tab_analytics);
-                    return true;
-            }
-            return false;
-        }
-
-    };
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mTextMessage = (TextView) findViewById(R.id.message);
-        BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
-        navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
-    }
+        final Button button = (Button) findViewById(R.id.button3);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dispatchTakePictureIntent();
 
+            }
+        });
+    }
 
 
     String mCurrentPhotoPath;
@@ -96,5 +77,4 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
 }
