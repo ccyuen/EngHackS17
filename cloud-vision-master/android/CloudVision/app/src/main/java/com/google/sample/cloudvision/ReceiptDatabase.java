@@ -1,9 +1,5 @@
 package com.google.sample.cloudvision;
 
-/**
- * Created by Thefak on 2017-05-27.
- */
-
 import java.util.*;
 import java.io.*;
 import java.text.*;
@@ -104,5 +100,13 @@ public class ReceiptDatabase
 
     public void drop() {
         events = new ArrayList<Event>();
+        try {
+            ObjectOutputStream databaseFile = new ObjectOutputStream(new FileOutputStream(path));
+            databaseFile.writeObject(events);
+            databaseFile.close();
+        }
+        catch (IOException ex) {
+            ex.printStackTrace();
+        }
     }
 }

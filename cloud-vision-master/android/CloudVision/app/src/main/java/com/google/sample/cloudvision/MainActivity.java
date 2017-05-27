@@ -120,10 +120,8 @@ public class MainActivity extends AppCompatActivity {
         FloatingActionButton displayEntries = (FloatingActionButton) findViewById(R.id.displayEntries);
         displayEntries.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
-                String acc = "";
-                for (Event e: database.query())
-                    acc += e.toString() + "\n";
-                screen.setText(acc);
+                Intent intent = new Intent(MainActivity.this, StatisticsView.class);
+                MainActivity.this.startActivity(intent);
             }
         });
         FloatingActionButton dropEntries = (FloatingActionButton) findViewById(R.id.dropEntries);
@@ -133,6 +131,7 @@ public class MainActivity extends AppCompatActivity {
                 screen.setText("recent actions: none");
             }
         });
+
 
         mImageDetails = (TextView) findViewById(R.id.image_details);
         mMainImage = (ImageView) findViewById(R.id.main_image);
