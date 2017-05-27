@@ -3,7 +3,8 @@ package enghacks2017.myapplication;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import com.google.cloud.vision.v1.AnnotateImageRequest;
+//import com.google.cloud.vision.v1.AnnotateImageRequest;
+import com.google.api.services.vision.v1.model.AnnotateImageRequest;
 import com.google.gson.Gson;
 
 import org.apache.commons.codec.binary.Base64;
@@ -17,6 +18,10 @@ import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
+
+import com.google.api.services.vision.v1.model.Feature;
+import com.google.api.services.vision.v1.model.Image;
 
 class ConnectToService extends AsyncTask<String, Void, String> {
 
@@ -27,7 +32,8 @@ class ConnectToService extends AsyncTask<String, Void, String> {
     protected String doInBackground(String... filePath) {
         InputStream is = null;
         byte[] imageData = null;
-        AnnotateImageRequest imgRequest;
+        AnnotateImageRequest imgRequest = null;
+        Image image = new Image();
 
 
         imageData = Base64.encodeBase64(filePath[0].getBytes());
@@ -57,14 +63,20 @@ class ConnectToService extends AsyncTask<String, Void, String> {
         httpConnection.setRequestProperty("Content-Type", "application/json");
         httpConnection.setDoOutput(true);
 
+        // pass the 64 bit encoded string to image content for annotateimagerequest
+        image.encodeContent(imageData);
+        imgRequest.setImage(image);
+        imgRequest.setFeatures(new ArrayList<Feature>() {{
+            Feature labelDetection = new Feature();
+            labelDetection.setType("TEXT_DETECTION");
+            labelDetection.setMaxResults(10);
+            add(labelDetection);
+        }});
 
         BufferedWriter httpRequestBodyWriter = null;
         try {
             httpRequestBodyWriter = new BufferedWriter(new OutputStreamWriter(httpConnection.getOutputStream()));
             Log.wtf("hello","" + (httpConnection.getOutputStream()));
-            httpRequestBodyWriter.write
-                    ("{\"requests\":  [{ \"content\":\"" + imageData + "\" },"
-                            +" \"features\":[{ \"type\":\"LABEL_DETECTION\"}]}]}");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -94,6 +106,7 @@ class ConnectToService extends AsyncTask<String, Void, String> {
         return response;
     }
 
-//    protected void onPostExecute(MainActivity m) {
-//    }
+    protected void onPostExecute(MainActivity m) {
+
+    }
 }

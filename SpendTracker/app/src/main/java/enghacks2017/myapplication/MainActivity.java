@@ -16,7 +16,9 @@ import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.concurrent.ExecutionException;
 
+import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
@@ -38,8 +40,16 @@ public class MainActivity extends AppCompatActivity {
 
         test = (TextView) findViewById(R.id.test);
         //File f = new File(getExternalFilesDir("Pictures"), "Output.txt");
-        String filePath = getFilesDir() + "/Pictures/pic.jpg";
+        String filePath = "/data/enghacks2017.myapplication/files/Pictures/pic.jpg";
         test.setText(filePath);
-        new ConnectToService().execute(filePath);
+        String receiptStringData = "";
+        ConnectToService cTS = new ConnectToService();
+
+        try {
+            receiptStringData = cTS.execute(filePath).get();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        test.setText(receiptStringData);
     }
 }
