@@ -1,2 +1,2 @@
 # EngHackS17
-enghack project
+Android app created by Charles, Clement, Daniel and Jonathan for EngHack Summer 2017
