@@ -1,3 +1,5 @@
+package enghacks2017.myapplication;
+
 import java.util.*;
 import java.io.*;
 import java.text.*;
@@ -77,14 +79,14 @@ public class ReceiptDatabase
                     }
                 });
     }
-    public ArrayList<Event> query(Date datetime) {
+    public ArrayList<Event> query(final Date datetime) {
         return query(new Predicate() {
                 public boolean test(Event e) {
                     return fmt.format(e.datetime).equals(fmt.format(datetime));
                 }
             });
     }
-    public ArrayList<Event> query(String location) {
+    public ArrayList<Event> query(final String location) {
         return query(new Predicate() {
                 public boolean test(Event e) {
                     return e.location.equals(location);
